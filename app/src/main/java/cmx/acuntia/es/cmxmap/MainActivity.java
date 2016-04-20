@@ -1,23 +1,13 @@
 package cmx.acuntia.es.cmxmap;
 
-import android.app.DownloadManager;
-import android.content.Context;
-import android.media.Image;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
-
-import com.google.android.gms.appdatasearch.GetRecentContextCall;
-import com.google.android.gms.common.api.GoogleApiClient;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,7 +17,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.NetworkInterface;
 import java.net.URL;
 import java.net.URLConnection;
@@ -39,7 +28,6 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
 
-    private GoogleApiClient client;
     private static TextView text;
     static ListView lv;
 
@@ -62,17 +50,14 @@ public class MainActivity extends AppCompatActivity {
         lv = (ListView) findViewById(R.id.listView);
 
 
-
-
-        boton.setOnClickListener( new View.OnClickListener() {
+        assert boton != null;
+        boton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 try {
                     descarga();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
+                } catch (IOException | JSONException e) {
                     e.printStackTrace();
                 }
             }
@@ -95,8 +80,6 @@ public class MainActivity extends AppCompatActivity {
             urlConnection.setConnectTimeout(1000);
            is = urlConnection.getInputStream();
 
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -105,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
             BufferedReader reader = new BufferedReader(new InputStreamReader(
                     is, "iso-8859-1"), 8);
             StringBuilder sb = new StringBuilder();
-            String line = null;
+            String line;
             while ((line = reader.readLine()) != null) {
                 sb.append(line);
             }
@@ -136,8 +119,6 @@ public class MainActivity extends AppCompatActivity {
             urlConnection.setConnectTimeout(1000);
             is = urlConnection.getInputStream();
 
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -145,9 +126,9 @@ public class MainActivity extends AppCompatActivity {
             BufferedReader reader = new BufferedReader(new InputStreamReader(
                     is, "iso-8859-1"), 8);
             StringBuilder sb = new StringBuilder();
-            String line = null;
+            String line;
             while ((line = reader.readLine()) != null) {
-                sb.append(line + "n");
+                sb.append(line);
             }
             is.close();
             json = sb.toString();
@@ -158,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
         // try parse the string to a JSON object
         try {
             //jObj = new JSONObject(json);
-            jarray = new JSONArray( json.toString());
+            jarray = new JSONArray(json);
         } catch (JSONException e) {
             Log.e("JSON Parser", "Error parsing data " + e.toString());
         }
@@ -189,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return buf.toString();
             }
-        } catch (Exception ex) { } // for now eat exceptions
+        } catch (Exception ignored) { } // for now eat exceptions
         return "";
     }
 
