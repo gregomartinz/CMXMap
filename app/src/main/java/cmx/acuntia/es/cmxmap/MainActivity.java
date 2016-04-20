@@ -2,6 +2,7 @@ package cmx.acuntia.es.cmxmap;
 
 import android.app.DownloadManager;
 import android.content.Context;
+import android.media.Image;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -9,7 +10,10 @@ import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.google.android.gms.appdatasearch.GetRecentContextCall;
@@ -36,7 +40,9 @@ public class MainActivity extends AppCompatActivity {
 
 
     private GoogleApiClient client;
-    private static TextView test;
+    private static TextView text;
+    static ListView lv;
+
     static InputStream is = null;
     static JSONObject jObj = null;
     static JSONArray jarray = null;
@@ -50,18 +56,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        test = (TextView) findViewById(R.id.textView);
+
         Button boton = (Button) findViewById(R.id.buttonJson);
-        Button test = (Button) findViewById(R.id.buttonTest);
+        text = (TextView) findViewById(R.id.textView);
+        lv = (ListView) findViewById(R.id.listView);
 
 
-        test.setOnClickListener( new View.OnClickListener() {
 
-            @Override
-            public void onClick(View v) {
-                descargaTest();
-            }
-        });
+
         boton.setOnClickListener( new View.OnClickListener() {
 
             @Override
@@ -120,6 +122,9 @@ public class MainActivity extends AppCompatActivity {
            Log.e("JSON Parser", "Error parsing data " + e.toString());
         }
         jObj = jarray.getJSONObject(0);
+        JSONObject positionObj = jObj.getJSONObject("mapCoordinate");
+        text.setText(positionObj.toString());
+
     }
 
     private void descargaTest(){
@@ -158,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
             Log.e("JSON Parser", "Error parsing data " + e.toString());
         }
         // return JSON String
-        test.setText(jarray.toString());
+        text.setText(jarray.toString());
     }
 
     public static String getWifiMacAddress() {
