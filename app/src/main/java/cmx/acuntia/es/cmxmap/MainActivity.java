@@ -107,44 +107,6 @@ public class MainActivity extends AppCompatActivity {
         jObj = jarray.getJSONObject(0);
         JSONObject positionObj = jObj.getJSONObject("mapCoordinate");
         text.setText(positionObj.toString());
-
-    }
-
-    private void descargaTest(){
-        // Making HTTP request
-        try {
-            // defaultHttpClient
-            URL url = new URL("http://headers.jsontest.com/");
-            URLConnection urlConnection = url.openConnection();
-            urlConnection.setConnectTimeout(1000);
-            is = urlConnection.getInputStream();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    is, "iso-8859-1"), 8);
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            is.close();
-            json = sb.toString();
-            Log.d("Lo que se baja", json);
-        } catch (Exception e) {
-            Log.e("Buffer Error", "Error converting result " + e.toString());
-        }
-        // try parse the string to a JSON object
-        try {
-            //jObj = new JSONObject(json);
-            jarray = new JSONArray(json);
-        } catch (JSONException e) {
-            Log.e("JSON Parser", "Error parsing data " + e.toString());
-        }
-        // return JSON String
-        text.setText(jarray.toString());
     }
 
     public static String getWifiMacAddress() {
