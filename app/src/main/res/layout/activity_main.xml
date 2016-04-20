@@ -15,23 +15,14 @@
         android:text="Hello World!"
         android:id="@+id/textView2" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Aquí saldrá el Json"
-        android:id="@+id/textView"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
-
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Pulsar"
         android:id="@+id/buttonJson"
-        android:layout_below="@+id/textView"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="61dp" />
+        android:layout_marginTop="61dp"
+        android:layout_centerVertical="true" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
@@ -40,5 +31,12 @@
         android:text="Test"
         android:id="@+id/buttonTest"
         android:layout_below="@+id/buttonJson"
+        android:layout_centerHorizontal="true" />
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/listView"
+        android:layout_below="@+id/textView2"
         android:layout_centerHorizontal="true" />
 </RelativeLayout>
