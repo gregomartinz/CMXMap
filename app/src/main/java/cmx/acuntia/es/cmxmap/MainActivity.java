@@ -1,11 +1,14 @@
 package cmx.acuntia.es.cmxmap;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -17,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.URL;
 import java.net.URLConnection;
@@ -30,11 +34,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static TextView text;
     static ListView lv;
+    static ImageView img;
 
     static InputStream is = null;
     static JSONObject jObj = null;
     static JSONArray jarray = null;
     static String json = "";
+    String imgMap = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         Button boton = (Button) findViewById(R.id.buttonJson);
         text = (TextView) findViewById(R.id.textView);
-        lv = (ListView) findViewById(R.id.listView);
+        img = (ImageView) findViewById(R.id.imageView);
 
 
         assert boton != null;
@@ -57,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 try {
                     descarga();
+                    downloadMap();
                 } catch (IOException | JSONException e) {
                     e.printStackTrace();
                 }
@@ -106,6 +113,9 @@ public class MainActivity extends AppCompatActivity {
         }
         jObj = jarray.getJSONObject(0);
         JSONObject positionObj = jObj.getJSONObject("mapCoordinate");
+        JSONObject aux = jObj.getJSONObject("mapInfo");
+        JSONObject aux2 = aux.getJSONObject("image");
+        imgMap = aux2.getString("imageName");
         text.setText(positionObj.toString());
     }
 
@@ -136,4 +146,22 @@ public class MainActivity extends AppCompatActivity {
         return "";
     }
 
+    private void downloadMap() throws IOException {
+
+        String dir = "http://192.168.104.24/api/config/v1/maps/imagesource/" + imgMap;
+        URL url = new URL(dir);
+        URLConnection urlConnection = url.openConnection();
+        urlConnection.setDoInput(true);
+        urlConnection.setRequestProperty("authorization", "Basic YWRtaW46QWN1bnQxYQ==");
+        urlConnection.setRequestProperty("cache-control", "no-cache");
+        urlConnection.setConnectTimeout(1000);
+        is = urlConnection.getInputStream();
+
+        Bitmap bitmap = BitmapFactory.decodeStream(is);
+        img.setImageBitmap(bitmap);
+
+        Log.d("EL mapa está en :" , String.valueOf(img.getX()));
+
+
+    }
 }
