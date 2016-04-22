@@ -1,7 +1,9 @@
 package cmx.acuntia.es.cmxmap;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
@@ -40,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     Integer imgx = 0;
     Integer imgy = 0;
     private Paint drawPaint;
+    Double x = 0.0;
+    Double y = 0.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,8 +127,23 @@ public class MainActivity extends AppCompatActivity {
         getJSONData();
         String dir = "http://192.168.104.24/api/config/v1/maps/imagesource/" + imgMap;
 
+        Paint currentPaint;
+        currentPaint = new Paint();
+        currentPaint.setDither(true);
+        currentPaint.setColor(0xFF000000);  // alpha.r.g.b
+        currentPaint.setStyle(Paint.Style.STROKE);
+        currentPaint.setStrokeJoin(Paint.Join.ROUND);
+        currentPaint.setStrokeCap(Paint.Cap.ROUND);
+        currentPaint.setStrokeWidth(20);
+
         Bitmap bitmap = new ImageTask().execute(dir).get();
-        img.setImageBitmap(bitmap);
+        Bitmap tempBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.RGB_565);
+        Canvas tempCanvas = new Canvas(tempBitmap);
+        tempCanvas.drawBitmap(bitmap, 0, 0, null);
+        tempCanvas.drawCircle(Float.valueOf(String.valueOf(x)),Float.valueOf(String.valueOf(y)),10,currentPaint);
+        img.setImageDrawable(new BitmapDrawable(getResources(), tempBitmap));
+
+        //img.setImageBitmap(bitmap);
 
         imgx = img.getWidth();
         imgy = img.getHeight();
@@ -152,8 +171,8 @@ public class MainActivity extends AppCompatActivity {
         Double propx = (double) (imgx / mapx);
         Double propy = (double) (imgy / mapy);
 
-        Double x = posx*propx;
-        Double y = posy*propy;
+        x = posx*propx;
+        y = posy*propy;
 
 //        ImageView imageView=(ImageView) findViewById(R.id.imageView2);
 //        Bitmap bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
