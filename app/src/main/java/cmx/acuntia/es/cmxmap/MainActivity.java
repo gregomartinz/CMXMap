@@ -1,14 +1,10 @@
 package cmx.acuntia.es.cmxmap;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -18,25 +14,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.NetworkInterface;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 
 public class MainActivity extends AppCompatActivity {
 
 
-    private static final int RED = -65536 ;
     private static TextView text;
+    private static TextView pos;
     static ImageView img;
-    static ImageView punto;
     static Button boton;
 
     static InputStream is = null;
@@ -46,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
     String ubicacion = "";
     static String json = "";
     String imgMap = "";
+    Integer imgx = 0;
+    Integer imgy = 0;
+    private Paint drawPaint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +52,15 @@ public class MainActivity extends AppCompatActivity {
 
         boton = (Button) findViewById(R.id.buttonJson);
         text = (TextView) findViewById(R.id.textView);
+        pos = (TextView) findViewById(R.id.textView2);
         img = (ImageView) findViewById(R.id.imageView);
+        try {
+            descarga();
+            downloadMap();
+            getZone();
+        } catch (IOException | JSONException | InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
 
 
         assert boton != null;
@@ -69,60 +71,25 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     descarga();
                     downloadMap();
-                } catch (IOException | JSONException | InterruptedException e) {
+                    getZone();
+                } catch (IOException | JSONException | InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
             }
         });
     }
 
-    private void descarga() throws IOException, JSONException, InterruptedException {
-        // Making HTTP GET
-        try {
-            String mac = getWifiMacAddress();
-            mac = mac.toLowerCase();
-            mac = URLEncoder.encode(mac, "UTF-8");
-            String dir = "http://192.168.104.24/api/location/v2/clients?macAddress=" + mac;
-            URL url = new URL(dir);
-            Log.d("la url es", url.toString());
-            URLConnection urlConnection = url.openConnection();
-            urlConnection.setDoInput(true);
-            urlConnection.setRequestProperty("authorization", "Basic YWRtaW46QWN1bnQxYQ==");
-            urlConnection.setRequestProperty("cache-control", "no-cache");
-            urlConnection.setConnectTimeout(1000);
-           is = urlConnection.getInputStream();
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        //Read the content of the GET method
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    is, "iso-8859-1"), 8);
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            is.close();
-            json = sb.toString();
-            Log.d("Lo que se baja", json);
-        } catch (Exception e) {
-            Log.e("Buffer Error", "Error converting result " + e.toString());
-        }
-        //Try parse the string to a JSON object
-        try {
-          jarray = new JSONArray(json);
-        } catch (JSONException e) {
-           Log.e("JSON Parser", "Error parsing data " + e.toString());
-        }
-        jObj = jarray.getJSONObject(0);
-        positionObj = jObj.getJSONObject("mapCoordinate");
-        JSONObject aux = jObj.getJSONObject("mapInfo");
-        JSONObject aux2 = aux.getJSONObject("image");
-        imgMap = aux2.getString("imageName");
-        getZone();
-        //text.setText(positionObj.toString());
+
+    private void descarga() throws IOException, JSONException, InterruptedException, ExecutionException {
+
+        String mac = getWifiMacAddress();
+        jObj = new DownloadTask().execute(mac).get();
+
     }
 
     public static String getWifiMacAddress() {
@@ -152,57 +119,65 @@ public class MainActivity extends AppCompatActivity {
         return "";
     }
 
-    private void downloadMap() throws IOException, JSONException {
+    private void downloadMap() throws IOException, JSONException, ExecutionException, InterruptedException {
         getJSONData();
         String dir = "http://192.168.104.24/api/config/v1/maps/imagesource/" + imgMap;
-        URL url = new URL(dir);
-        URLConnection urlConnection = url.openConnection();
-        urlConnection.setDoInput(true);
-        urlConnection.setRequestProperty("authorization", "Basic YWRtaW46QWN1bnQxYQ==");
-        urlConnection.setRequestProperty("cache-control", "no-cache");
-        urlConnection.setConnectTimeout(1000);
-        is = urlConnection.getInputStream();
 
-        Bitmap bitmap = BitmapFactory.decodeStream(is);
+        Bitmap bitmap = new ImageTask().execute(dir).get();
         img.setImageBitmap(bitmap);
 
-        Log.d("EL mapa está en :" , String.valueOf(img.getX()) + " " + String.valueOf(img.getY()));
-        Log.d("EL boton está en :" , String.valueOf(boton.getX()));
+        imgx = img.getWidth();
+        imgy = img.getHeight();
     }
 
-    public void getZone() throws JSONException {
+    public void getZone() throws JSONException, InterruptedException {
 
         getJSONData();
-        Integer x = positionObj.getInt("x");
-        Integer y = positionObj.getInt("y");
+        JSONObject mapInfo = jObj.getJSONObject("mapInfo");
+        JSONObject floorDimension = mapInfo.getJSONObject("floorDimension");
+        Integer mapx = floorDimension.getInt("width");
+        Integer mapy = floorDimension.getInt("length");
 
-        if(y<60 && x<105 || 45<y && y<55 && x<140){
+        imgx = img.getWidth();
+        imgy = img.getHeight();
+
+        Integer posx = positionObj.getInt("x");
+        Integer posy = positionObj.getInt("y");
+
+        if(imgx == 0 && imgy == 0){
+            imgx = 1;
+            imgy = 1;
+        }
+
+        Double propx = (double) (imgx / mapx);
+        Double propy = (double) (imgy / mapy);
+
+        Double x = posx*propx;
+        Double y = posy*propy;
+
+//        ImageView imageView=(ImageView) findViewById(R.id.imageView2);
+//        Bitmap bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
+//        Canvas canvas = new Canvas(bitmap);
+//        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+//        paint.setColor(Color.BLACK);
+//        canvas.drawCircle( 10, 10,  10, paint);
+//        img.draw(canvas);
+//        imageView.setImageBitmap(bitmap);
+
+        if(posy<60 && posx<105 || 45<posy && posy<55 && posx<140){
             ubicacion = "FORMACION";
-        }if (y>60 && x<135){
+        }if (posy>60 && posx<135){
             ubicacion = "PYCLUCAS";
-        }if (y<45 && x>105 && x<140 || x>139 && x<172 && y<55 || x>172 && x<200 && y<61 || x>200 && x<240 && y<75){
+        }if (posy<45 && posx>105 && posx<140 || posx>139 && posx<172 && posy<55 || posx>172 && posx<200 && posy<61 || posx>200 && posx<240 && posy<75){
             ubicacion = "SOPORTE";
-        }if (x>139 && x<172 && y>84 || x>172 && x<200 && y>79 || x>200 && x<240 && y>75){
+        }if (posx>139 && posx<172 && posy>84 || posx>172 && posx<200 && posy>79 || posx>200 && posx<240 && posy>75){
             ubicacion = "PYCALBERTO";
-        }if (y>55 && y<85 && x>113 && x<160){
+        }if (posy>55 && posy<85 && posx>113 && posx<160){
             ubicacion = "HALL";
         }
         text.setText(ubicacion);
-        Log.d("El punto en: ", String.valueOf(x));
-
-
+        pos.setText("x: " + x + "y: " + y);
     }
-
-//    @Override
-//    protected void onDraw(Canvas canvas)
-//    {
-//        super.onDraw(canvas);
-//        canvas = new Canvas();
-//        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-//        paint.setColor(RED);
-//        canvas.drawCircle(100,50,20,paint);
-//        //canvas.drawPoint(700,y,paint);
-//    }
 
     private void getJSONData() throws JSONException {
         positionObj = jObj.getJSONObject("mapCoordinate");
