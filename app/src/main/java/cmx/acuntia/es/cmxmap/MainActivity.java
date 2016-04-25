@@ -1,10 +1,12 @@
 package cmx.acuntia.es.cmxmap;
 
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -12,12 +14,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
@@ -32,18 +32,16 @@ public class MainActivity extends AppCompatActivity {
     static ImageView img;
     static Button boton;
 
-    static InputStream is = null;
     static JSONObject jObj = null;
     static JSONObject positionObj = null;
-    static JSONArray jarray = null;
     String ubicacion = "";
-    static String json = "";
     String imgMap = "";
-    Integer imgx = 0;
-    Integer imgy = 0;
-    private Paint drawPaint;
+    Double imgx = 0.0;
+    Double imgy = 0.0;
     Double x = 0.0;
     Double y = 0.0;
+    final Handler h = new Handler();
+    final int delay = 5000; //milliseconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,19 +51,25 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         boton = (Button) findViewById(R.id.buttonJson);
         text = (TextView) findViewById(R.id.textView);
         pos = (TextView) findViewById(R.id.textView2);
         img = (ImageView) findViewById(R.id.imageView);
-        try {
-            descarga();
-            downloadMap();
-            getZone();
-        } catch (IOException | JSONException | InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
 
+
+
+        h.postDelayed(new Runnable(){
+            public void run(){
+                try {
+                    descarga();
+                    downloadMap();
+                    getZone();
+                } catch (IOException | JSONException | InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+                h.postDelayed(this, delay);
+            }
+        }, delay);
 
         assert boton != null;
         boton.setOnClickListener(new View.OnClickListener() {
@@ -86,8 +90,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        try {
+            descarga();
+            downloadMap();
+            getZone();
+        } catch (IOException | JSONException | InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
     }
-
 
     private void descarga() throws IOException, JSONException, InterruptedException, ExecutionException {
 
@@ -140,13 +150,14 @@ public class MainActivity extends AppCompatActivity {
         Bitmap tempBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.RGB_565);
         Canvas tempCanvas = new Canvas(tempBitmap);
         tempCanvas.drawBitmap(bitmap, 0, 0, null);
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+            x = x+208;
+        }
         tempCanvas.drawCircle(Float.valueOf(String.valueOf(x)),Float.valueOf(String.valueOf(y)),10,currentPaint);
         img.setImageDrawable(new BitmapDrawable(getResources(), tempBitmap));
 
-        //img.setImageBitmap(bitmap);
-
-        imgx = img.getWidth();
-        imgy = img.getHeight();
+        imgx = (double) img.getWidth();
+        imgy = (double) img.getHeight();
     }
 
     public void getZone() throws JSONException, InterruptedException {
@@ -157,31 +168,23 @@ public class MainActivity extends AppCompatActivity {
         Integer mapx = floorDimension.getInt("width");
         Integer mapy = floorDimension.getInt("length");
 
-        imgx = img.getWidth();
-        imgy = img.getHeight();
 
-        Integer posx = positionObj.getInt("x");
-        Integer posy = positionObj.getInt("y");
+        imgx = (double) img.getWidth();
+        imgy = (double) img.getHeight();
+
+        Double posx = positionObj.getDouble("x");
+        Double posy = positionObj.getDouble("y");
 
         if(imgx == 0 && imgy == 0){
-            imgx = 1;
-            imgy = 1;
+            imgx = 1.0;
+            imgy = 1.0;
         }
 
-        Double propx = (double) (imgx / mapx);
-        Double propy = (double) (imgy / mapy);
+        Double propx = imgx / mapx;
+        Double propy = imgy / mapy;
 
         x = posx*propx;
         y = posy*propy;
-
-//        ImageView imageView=(ImageView) findViewById(R.id.imageView2);
-//        Bitmap bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
-//        Canvas canvas = new Canvas(bitmap);
-//        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-//        paint.setColor(Color.BLACK);
-//        canvas.drawCircle( 10, 10,  10, paint);
-//        img.draw(canvas);
-//        imageView.setImageBitmap(bitmap);
 
         if(posy<60 && posx<105 || 45<posy && posy<55 && posx<140){
             ubicacion = "FORMACION";
@@ -195,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
             ubicacion = "HALL";
         }
         text.setText(ubicacion);
-        pos.setText("x: " + x + "y: " + y);
+        pos.setText("x: " + posx.intValue() + "y: " + posy.intValue());
     }
 
     private void getJSONData() throws JSONException {
