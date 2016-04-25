@@ -8,7 +8,11 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
+import android.support.v4.view.MotionEventCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -24,8 +28,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 
-public class MainActivity extends AppCompatActivity {
-
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener{
 
     private static TextView text;
     private static TextView pos;
@@ -55,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
         text = (TextView) findViewById(R.id.textView);
         pos = (TextView) findViewById(R.id.textView2);
         img = (ImageView) findViewById(R.id.imageView);
-
 
 
         h.postDelayed(new Runnable(){
@@ -206,5 +208,16 @@ public class MainActivity extends AppCompatActivity {
         JSONObject aux = jObj.getJSONObject("mapInfo");
         JSONObject aux2 = aux.getJSONObject("image");
         imgMap = aux2.getString("imageName");
+    }
+
+    @Override
+    public void onRefresh() {
+//        try {
+//            descarga();
+//            downloadMap();
+//            getZone();
+//        } catch (IOException | JSONException | InterruptedException | ExecutionException e) {
+//            e.printStackTrace();
+//        }
     }
 }
