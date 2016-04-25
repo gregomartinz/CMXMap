@@ -13,6 +13,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 
-public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener{
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private static TextView text;
     private static TextView pos;
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     Double y = 0.0;
     final Handler h = new Handler();
     final int delay = 5000; //milliseconds
+    private ScaleGestureDetector mScaleDetector;
+    private float mScaleFactor = 1.f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         img = (ImageView) findViewById(R.id.imageView);
 
 
+        mScaleDetector = new ScaleGestureDetector(getBaseContext(), new ScaleListener());
         h.postDelayed(new Runnable(){
             public void run(){
                 try {
@@ -152,6 +156,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         Bitmap tempBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.RGB_565);
         Canvas tempCanvas = new Canvas(tempBitmap);
         tempCanvas.drawBitmap(bitmap, 0, 0, null);
+       ///////////////
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
             x = x+208;
         }
@@ -208,6 +213,25 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         JSONObject aux = jObj.getJSONObject("mapInfo");
         JSONObject aux2 = aux.getJSONObject("image");
         imgMap = aux2.getString("imageName");
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        // Let the ScaleGestureDetector inspect all events.
+        mScaleDetector.onTouchEvent(ev);
+        return true;
+    }
+    private class ScaleListener
+            extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            mScaleFactor *= detector.getScaleFactor();
+
+            // Don't let the object get too small or too large.
+            mScaleFactor = Math.max(0.1f, Math.min(mScaleFactor, 5.0f));
+
+            return true;
+        }
     }
 
     @Override
