@@ -159,9 +159,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
             x = x+108;
         }
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-            x = x-408;
-        }
+//        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+//            x = x-408;
+//        }
         tempCanvas.drawCircle(Float.valueOf(String.valueOf(x)),Float.valueOf(String.valueOf(y)),10,currentPaint);
         img.setImageDrawable(new BitmapDrawable(getResources(), tempBitmap));
 
