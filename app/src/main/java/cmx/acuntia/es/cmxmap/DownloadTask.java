@@ -32,7 +32,7 @@ public class DownloadTask extends AsyncTask<String, Integer, JSONObject> {
             mac = URLEncoder.encode(mac, "UTF-8");
             String dir = "http://192.168.104.24/api/location/v2/clients?macAddress=" + mac;
             URL url = new URL(dir);
-            Log.d("la url es", url.toString());
+//            Log.d("la url es", url.toString());
             URLConnection urlConnection = url.openConnection();
             urlConnection.setDoInput(true);
             urlConnection.setRequestProperty("authorization", "Basic YWRtaW46QWN1bnQxYQ==");
@@ -54,7 +54,7 @@ public class DownloadTask extends AsyncTask<String, Integer, JSONObject> {
             }
             is.close();
             json = sb.toString();
-            Log.d("Lo que se baja", json);
+//            Log.d("Lo que se baja", json);
         } catch (Exception e) {
             Log.e("Buffer Error", "Error converting result " + e.toString());
         }

@@ -8,7 +8,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
-import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -35,9 +34,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private static TextView pos;
     static ImageView img;
     static Button boton;
-
     static JSONObject jObj = null;
     static JSONObject positionObj = null;
+
     String ubicacion = "";
     String imgMap = "";
     Double imgx = 0.0;
@@ -46,8 +45,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     Double y = 0.0;
     final Handler h = new Handler();
     final int delay = 5000; //milliseconds
-    private ScaleGestureDetector mScaleDetector;
-    private float mScaleFactor = 1.f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,11 +59,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         pos = (TextView) findViewById(R.id.textView2);
         img = (ImageView) findViewById(R.id.imageView);
 
-
-        mScaleDetector = new ScaleGestureDetector(getBaseContext(), new ScaleListener());
+//        img.set(img.getWidth()*mScaleFactor);
+//        img.setScaleY(img.getHeight()*mScaleFactor);
         h.postDelayed(new Runnable(){
             public void run(){
                 try {
+                    Log.d("Modo automático cada ",delay + " ms");
                     descarga();
                     downloadMap();
                     getZone();
@@ -97,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     protected void onStart() {
         super.onStart();
         try {
+            Log.d("Iniciando la aplicación","");
             descarga();
             downloadMap();
             getZone();
@@ -156,9 +155,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         Bitmap tempBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.RGB_565);
         Canvas tempCanvas = new Canvas(tempBitmap);
         tempCanvas.drawBitmap(bitmap, 0, 0, null);
-       ///////////////
+        ///////////////
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
-            x = x+208;
+            x = x+108;
+        }
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+            x = x-408;
         }
         tempCanvas.drawCircle(Float.valueOf(String.valueOf(x)),Float.valueOf(String.valueOf(y)),10,currentPaint);
         img.setImageDrawable(new BitmapDrawable(getResources(), tempBitmap));
@@ -190,8 +192,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         Double propx = imgx / mapx;
         Double propy = imgy / mapy;
 
-        x = posx*propx;
-        y = posy*propy;
+        x = img.getX() + posx*propx;
+        y = img.getY() + posy*propy;
 
         if(posy<60 && posx<105 || 45<posy && posy<55 && posx<140){
             ubicacion = "FORMACION";
@@ -213,25 +215,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         JSONObject aux = jObj.getJSONObject("mapInfo");
         JSONObject aux2 = aux.getJSONObject("image");
         imgMap = aux2.getString("imageName");
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        // Let the ScaleGestureDetector inspect all events.
-        mScaleDetector.onTouchEvent(ev);
-        return true;
-    }
-    private class ScaleListener
-            extends ScaleGestureDetector.SimpleOnScaleGestureListener {
-        @Override
-        public boolean onScale(ScaleGestureDetector detector) {
-            mScaleFactor *= detector.getScaleFactor();
-
-            // Don't let the object get too small or too large.
-            mScaleFactor = Math.max(0.1f, Math.min(mScaleFactor, 5.0f));
-
-            return true;
-        }
     }
 
     @Override
